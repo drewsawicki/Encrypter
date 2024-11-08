@@ -3,22 +3,25 @@
 #include <iostream>
 #include <cstdlib>
 
-Options parseOptions(int argc, char* argv[])
+Options parse(int argc, char* argv[])
 {
     Options options;
-    options.key = 0;
-    options.valid = ture;
+    opterr = false;
+    int option_index = 0;
+    int option = 0;
+    options.shift = 0;
+    options.valid = true;
 
     const struct option longOptions[] = {
         {"mode", required_argument, nullptr, 'm'},
         {"input", required_argument, nullptr, 'i'},
         {"output", required_argument, nullptr, 'o'},
-        {"key", required_argument, nullptr, 'k'},
-        {nullptr, 0, nullptr, 0}
+        {"shift", required_argument, nullptr, 's'},
+        {nullptr, 0, nullptr, '\0'}
     };
 
     int opt;
-    while ((opt = getopt_long(argc, argv, "m:i:o:k:", longOptions, nullptr)) != -1) {
+    while ((opt = getopt_long(argc, argv, "m:i:o:s:", longOptions, &option_index)) != -1) {
         switch (opt) {
             case 'm':
                 options.mode = optarg;
@@ -29,8 +32,16 @@ Options parseOptions(int argc, char* argv[])
             case 'o':
                 options.outputFile = optarg;
                 break;
-            case 'k':
-                options.key = optarg;
+            case 's':
+                try {
+                    options.shift = std::stoi(optarg); 
+                } catch (const std::invalid_argument& e) {
+                    std::cerr << "Invalid argument for shift: " << optarg << "\n";
+                    options.valid = false;  // Mark as invalid if conversion fails
+                } catch (const std::out_of_range& e) {
+                    std::cerr << "Shift value out of range: " << optarg << "\n";
+                    options.valid = false;  // Mark as invalid if number is too large/small
+                }
                 break;
             case '?':
                 options.valid = false;
@@ -38,10 +49,21 @@ Options parseOptions(int argc, char* argv[])
         }
     }
 
-    if (options.mode.empty() || options.inputFile.empty() || options.outputFile.empty() || options.key.empty()) {
+    if (options.inputFile.empty() || options.outputFile.empty()) {
         options.valid = false;
         std::cerr << "Missing required options. Usage:\n"
-                  << "  --mode <encrypt|decrypt> --input <input_file> --output <output_file> --key <key>\n";
+                  << "  --mode <encrypt|decrypt> --input <input_file> --output <output_file> --shift <shift>\n";
+    }
+
+    if (options.mode != "encrypt" && options.mode != "decrypt") {
+        options.valid = false;
+        std::cerr << "Invalid mode. Usage:\n"
+                  << " --mode <encrypt|decrypt>\n";
+    }
+
+    if (options.shift == 0) {
+        options.valid = false;
+        std::cerr << "Must use shift value greater than 0.\n";
     }
 
     return options;

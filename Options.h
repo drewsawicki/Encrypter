@@ -7,10 +7,10 @@ struct Options {
     std::string mode;
     std::string inputFile;
     std::string outputFile;
-    int key;
+    int shift;
     bool valid;
 };
 
-Options parseOptions(int argc, char* argv[]);
+Options parse(int argc, char* argv[]);
 
 #endif
