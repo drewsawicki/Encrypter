@@ -1,0 +1,7 @@
+# Ignore build files
+*.o
+*.out
+*.exe
+
+# Ignore other files
+.DS_Store
